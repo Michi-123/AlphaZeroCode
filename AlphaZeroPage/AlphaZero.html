@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlphaZero 五目並べ 7×7 学習システム</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .panel {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .panel h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .hyperparameters {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .param-group {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .param-group label {
+            display: block;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .param-group input {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .param-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .param-group .value-display {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+
+        .control-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+        }
+
+        .metric-card .label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .metric-card .value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .log-container {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 3px 0;
+        }
+
+        .log-entry.error {
+            color: #ff4444;
+        }
+
+        .log-entry.success {
+            color: #44ff44;
+        }
+
+        .log-entry.info {
+            color: #4444ff;
+        }
+
+        .board-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        #gameBoard {
+            border: 3px solid #333;
+            background: #daa520;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .chart-container {
+            margin-top: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 300px !important;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .training {
+            animation: pulse 1.5s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 AlphaZero 五目並べ 7×7 学習システム</h1>
+
+        <div class="main-grid">
+            <!-- ハイパーパラメータ設定 -->
+            <div class="panel">
+                <h2>⚙️ ハイパーパラメータ</h2>
+                <div class="hyperparameters">
+                    <div class="param-group">
+                        <label>ボードサイズ (board_width)</label>
+                        <input type="number" id="board_width" value="7" readonly>
+                    </div>
+                    <div class="param-group">
+                        <label>勝利条件 (連続数)</label>
+                        <input type="number" id="win_condition" value="5" readonly>
+                    </div>
+                    <div class="param-group">
+                        <label>シミュレーション回数 (num_simulation)</label>
+                        <input type="number" id="num_simulation" value="100" min="10" max="1600">
+                    </div>
+                    <div class="param-group">
+                        <label>バッチサイズ (batch_size)</label>
+                        <input type="number" id="batch_size" value="128" min="32" max="512">
+                    </div>
+                    <div class="param-group">
+                        <label>エポック数 (num_epoch)</label>
+                        <input type="number" id="num_epoch" value="10" min="1" max="50">
+                    </div>
+                    <div class="param-group">
+                        <label>学習率 (learning_rate)</label>
+                        <input type="number" id="learning_rate" value="0.001" step="0.0001" min="0.0001" max="0.1">
+                    </div>
+                    <div class="param-group">
+                        <label>重み減衰 (weight_decay)</label>
+                        <input type="number" id="weight_decay" value="0.0001" step="0.0001" min="0" max="0.01">
+                    </div>
+                    <div class="param-group">
+                        <label>残差ブロック数 (n_residual_block)</label>
+                        <input type="number" id="n_residual_block" value="5" min="1" max="20">
+                    </div>
+                    <div class="param-group">
+                        <label>ResNetチャンネル数 (resnet_channels)</label>
+                        <input type="number" id="resnet_channels" value="128" min="32" max="512" step="32">
+                    </div>
+                    <div class="param-group">
+                        <label>履歴サイズ (history_size)</label>
+                        <input type="number" id="history_size" value="8" min="1" max="16">
+                    </div>
+                    <div class="param-group">
+                        <label>隠れ層サイズ (hidden_size)</label>
+                        <input type="number" id="hidden_size" value="256" min="64" max="1024" step="64">
+                    </div>
+                    <div class="param-group">
+                        <label>CPUCT (cpuct)</label>
+                        <input type="number" id="cpuct" value="1.5" step="0.1" min="0.1" max="10">
+                    </div>
+                    <div class="param-group">
+                        <label>温度パラメータ (tau)</label>
+                        <input type="number" id="tau" value="1.0" step="0.1" min="0" max="2">
+                    </div>
+                    <div class="param-group">
+                        <label>温度制限手数 (tau_limit)</label>
+                        <input type="number" id="tau_limit" value="10" min="1" max="30">
+                    </div>
+                    <div class="param-group">
+                        <label>Dirichlet ε (Dirichlet_epsilon)</label>
+                        <input type="number" id="dirichlet_epsilon" value="0.25" step="0.01" min="0" max="1">
+                    </div>
+                    <div class="param-group">
+                        <label>Dirichlet α (Dirichlet_alpha)</label>
+                        <input type="number" id="dirichlet_alpha" value="0.3" step="0.1" min="0.1" max="2">
+                    </div>
+                    <div class="param-group">
+                        <label>データセット最大サイズ (max_dataset_size)</label>
+                        <input type="number" id="max_dataset_size" value="50000" min="1000" max="500000" step="1000">
+                    </div>
+                    <div class="param-group">
+                        <label>自己対局数/イテレーション</label>
+                        <input type="number" id="games_per_iteration" value="100" min="1" max="1000">
+                    </div>
+                </div>
+
+                <div class="control-buttons">
+                    <button class="btn-start" id="startBtn">開始</button>
+                    <button class="btn-stop" id="stopBtn" disabled>停止</button>
+                    <button class="btn-reset" id="resetBtn">リセット</button>
+                </div>
+            </div>
+
+            <!-- メトリクスとボード表示 -->
+            <div class="panel">
+                <h2>📊 学習状況</h2>
+                <div class="metrics">
+                    <div class="metric-card">
+                        <div class="label">イテレーション</div>
+                        <div class="value" id="iteration">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="label">総ゲーム数</div>
+                        <div class="value" id="totalGames">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="label">データセットサイズ</div>
+                        <div class="value" id="datasetSize">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="label">現在エポック</div>
+                        <div class="value" id="currentEpoch">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="label">Policy Loss</div>
+                        <div class="value" id="policyLoss">0.000</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="label">Value Loss</div>
+                        <div class="value" id="valueLoss">0.000</div>
+                    </div>
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%">
+                        <span id="progressText">0%</span>
+                    </div>
+                </div>
+
+                <div class="board-container">
+                    <canvas id="gameBoard" width="420" height="420"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="lossChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ログ表示 -->
+        <div class="panel">
+            <h2>📝 学習ログ</h2>
+            <div class="log-container" id="logContainer"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // ==================== グローバル変数 ====================
+        let isTraining = false;
+        let dataset = [];
+        let iteration = 0;
+        let totalGames = 0;
+        let model = null;
+        let lossHistory = { policy: [], value: [], total: [] };
+        let chart = null;
+
+        // ==================== ゲーム環境クラス ====================
+        class Gomoku {
+            constructor(size = 7, winCondition = 5) {
+                this.size = size;
+                this.winCondition = winCondition;
+                this.reset();
+            }
+
+            reset() {
+                this.state = Array(this.size).fill(0).map(() => Array(this.size).fill(0));
+                this.player = -1; // 先手: -1, 後手: 1
+                this.done = false;
+                this.reward = 0;
+                return this.state;
+            }
+
+            step(action) {
+                const x = Math.floor(action / this.size);
+                const y = action % this.size;
+                
+                this.state[x][y] = this.player;
+                
+                if (this.checkWin(action)) {
+                    this.done = true;
+                    this.reward = 1; // 勝利
+                } else if (this.isDraw()) {
+                    this.done = true;
+                    this.reward = 0; // 引き分け
+                }
+                
+                this.player = -this.player;
+                return [this.state, this.reward, this.done];
+            }
+
+            getLegalActions() {
+                const actions = [];
+                for (let i = 0; i < this.size * this.size; i++) {
+                    const x = Math.floor(i / this.size);
+                    const y = i % this.size;
+                    if (this.state[x][y] === 0) {
+                        actions.push(i);
+                    }
+                }
+                return actions;
+            }
+
+            checkWin(action) {
+                const x = Math.floor(action / this.size);
+                const y = action % this.size;
+                const player = this.state[x][y];
+                const directions = [[0,1], [1,0], [1,1], [-1,1]];
+
+                for (const [dx, dy] of directions) {
+                    let count = 1;
+                    
+                    for (const sign of [1, -1]) {
+                        let i = 1;
+                        while (true) {
+                            const nx = x + i * dx * sign;
+                            const ny = y + i * dy * sign;
+                            if (nx >= 0 && ny >= 0 && nx < this.size && ny < this.size && 
+                                this.state[nx][ny] === player) {
+                                count++;
+                                i++;
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (count >= this.winCondition) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            isDraw() {
+                for (let row of this.state) {
+                    if (row.includes(0)) return false;
+                }
+                return true;
+            }
+
+            clone() {
+                const cloned = new Gomoku(this.size, this.winCondition);
+                cloned.state = this.state.map(row => [...row]);
+                cloned.player = this.player;
+                cloned.done = this.done;
+                cloned.reward = this.reward;
+                return cloned;
+            }
+        }
+
+        // ==================== ノードクラス ====================
+        class Node {
+            constructor(state, player) {
+                this.state = state;
+                this.player = player;
+                this.children = [];
+                this.n = 0;
+                this.w = 0;
+                this.Q = 0;
+                this.p = 0;
+                this.action = null;
+            }
+        }
+
+        // ==================== 簡易ニューラルネットワーク ====================
+        class SimpleNetwork {
+            constructor(boardSize, actionSize) {
+                this.boardSize = boardSize;
+                this.actionSize = actionSize;
+                // 簡易実装: ランダムな方策と価値を返す
+            }
+
+            predict(state) {
+                // ランダムな方策（全アクションに均等な確率）
+                const policy = new Array(this.actionSize).fill(1 / this.actionSize);
+                // ランダムな価値（-1 ~ 1）
+                const value = (Math.random() - 0.5) * 2;
+                return [policy, value];
+            }
+
+            train(dataset, config) {
+                // 簡易的な学習シミュレーション
+                const policyLoss = Math.random() * 2 + 0.5;
+                const valueLoss = Math.random() * 1 + 0.3;
+                return [policyLoss, valueLoss];
+            }
+        }
+
+        // ==================== MCTS ====================
+        class MCTS {
+            constructor(env, model, config) {
+                this.env = env;
+                this.model = model;
+                this.config = config;
+            }
+
+            search(rootNode, numSimulations) {
+                for (let i = 0; i < numSimulations; i++) {
+                    const node = rootNode;
+                    const env = this.env.clone();
+                    this.simulate(node, env);
+                }
+                return this.selectAction(rootNode);
+            }
+
+            simulate(node, env) {
+                // リーフノードまで探索
+                if (env.done) {
+                    this.backpropagate(node, env.reward);
+                    return;
+                }
+
+                if (node.children.length === 0) {
+                    // 展開
+                    this.expand(node, env);
+                    const [policy, value] = this.model.predict(env.state);
+                    this.backpropagate(node, value);
+                } else {
+                    // 選択
+                    const childNode = this.selectChild(node);
+                    const [state, reward, done] = env.step(childNode.action);
+                    this.simulate(childNode, env);
+                }
+            }
+
+            expand(node, env) {
+                const legalActions = env.getLegalActions();
+                const [policy, value] = this.model.predict(env.state);
+
+                for (const action of legalActions) {
+                    const childEnv = env.clone();
+                    childEnv.step(action);
+                    const childNode = new Node(childEnv.state, childEnv.player);
+                    childNode.action = action;
+                    childNode.p = policy[action];
+                    node.children.push(childNode);
+                }
+            }
+
+            selectChild(node) {
+                let bestScore = -Infinity;
+                let bestChild = null;
+
+                const totalN = node.children.reduce((sum, child) => sum + child.n, 0);
+
+                for (const child of node.children) {
+                    const cpuct = this.config.cpuct;
+                    const U = cpuct * child.p * Math.sqrt(totalN) / (1 + child.n);
+                    const score = child.Q + U;
+
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestChild = child;
+                    }
+                }
+
+                return bestChild;
+            }
+
+            selectAction(node) {
+                // 訪問回数が最も多い行動を選択
+                let bestN = -1;
+                let bestChild = null;
+
+                for (const child of node.children) {
+                    if (child.n > bestN) {
+                        bestN = child.n;
+                        bestChild = child;
+                    }
+                }
+
+                return bestChild;
+            }
+
+            backpropagate(node, value) {
+                node.n += 1;
+                node.w += value;
+                node.Q = node.w / node.n;
+            }
+        }
+
+        // ==================== 自己対局 ====================
+        async function selfPlay(env, mcts, config) {
+            const gameData = [];
+            env.reset();
+            const rootNode = new Node(env.state, env.player);
+
+            while (!env.done) {
+                const actionNode = mcts.search(rootNode, config.num_simulation);
+                
+                // データ収集
+                const policy = new Array(config.action_size).fill(0);
+                for (const child of rootNode.children) {
+                    policy[child.action] = child.n / rootNode.n;
+                }
+
+                gameData.push({
+                    state: env.state.map(row => [...row]),
+                    policy: policy,
+                    player: env.player
+                });
+
+                const [state, reward, done] = env.step(actionNode.action);
+                
+                // ボード描画
+                drawBoard(env.state);
+                await sleep(10);
+
+                if (!done) {
+                    rootNode.state = state;
+                    rootNode.player = env.player;
+                    rootNode.children = [];
+                }
+            }
+
+            // 結果の割り当て
+            const finalReward = env.reward;
+            for (let i = 0; i < gameData.length; i++) {
+                const dataPlayer = gameData[i].player;
+                const value = (i % 2 === 0) ? finalReward : -finalReward;
+                gameData[i].value = value;
+            }
+
+            return gameData;
+        }
+
+        // ==================== 学習ループ ====================
+        async function trainingLoop() {
+            const config = getConfig();
+            const env = new Gomoku(config.board_width, config.win_condition);
+            model = new SimpleNetwork(config.board_width, config.action_size);
+            const mcts = new MCTS(env, model, config);
+
+            logMessage('学習を開始します...', 'success');
+            logMessage(`設定: ボード=${config.board_width}x${config.board_width}, シミュレーション=${config.num_simulation}`, 'info');
+
+            while (isTraining) {
+                iteration++;
+                updateMetric('iteration', iteration);
+                
+                logMessage(`\n========== イテレーション ${iteration} ==========`, 'success');
+
+                // 自己対局フェーズ
+                logMessage('自己対局を実行中...', 'info');
+                for (let game = 0; game < config.games_per_iteration; game++) {
+                    if (!isTraining) break;
+
+                    const gameData = await selfPlay(env, mcts, config);
+                    dataset.push(...gameData);
+                    totalGames++;
+                    
+                    updateMetric('totalGames', totalGames);
+                    updateMetric('datasetSize', dataset.length);
+                    
+                    const progress = ((game + 1) / config.games_per_iteration) * 100;
+                    updateProgress(progress);
+
+                    if ((game + 1) % 10 === 0) {
+                        logMessage(`  ゲーム ${game + 1}/${config.games_per_iteration} 完了`);
+                    }
+                }
+
+                // データセットのサイズ制限
+                if (dataset.length > config.max_dataset_size) {
+                    dataset = dataset.slice(-config.max_dataset_size);
+                    updateMetric('datasetSize', dataset.length);
+                }
+
+                // 学習フェーズ
+                if (dataset.length >= config.batch_size) {
+                    logMessage('ニューラルネットワークを学習中...', 'info');
+                    
+                    for (let epoch = 1; epoch <= config.num_epoch; epoch++) {
+                        updateMetric('currentEpoch', epoch);
+                        
+                        const [policyLoss, valueLoss] = model.train(dataset, config);
+                        const totalLoss = policyLoss + valueLoss;
+
+                        updateMetric('policyLoss', policyLoss.toFixed(3));
+                        updateMetric('valueLoss', valueLoss.toFixed(3));
+
+                        lossHistory.policy.push(policyLoss);
+                        lossHistory.value.push(valueLoss);
+                        lossHistory.total.push(totalLoss);
+
+                        if (epoch % 2 === 0) {
+                            logMessage(`  Epoch ${epoch}/${config.num_epoch}: Loss=${totalLoss.toFixed(4)} (Policy=${policyLoss.toFixed(4)}, Value=${valueLoss.toFixed(4)})`);
+                        }
+
+                        updateChart();
+                        await sleep(10);
+                    }
+                }
+
+                logMessage(`イテレーション ${iteration} 完了! データセットサイズ: ${dataset.length}`, 'success');
+                await sleep(100);
+            }
+
+            logMessage('学習を停止しました', 'error');
+        }
+
+        // ==================== UI関連 ====================
+        function getConfig() {
+            return {
+                board_width: parseInt(document.getElementById('board_width').value),
+                win_condition: parseInt(document.getElementById('win_condition').value),
+                num_simulation: parseInt(document.getElementById('num_simulation').value),
+                batch_size: parseInt(document.getElementById('batch_size').value),
+                num_epoch: parseInt(document.getElementById('num_epoch').value),
+                learning_rate: parseFloat(document.getElementById('learning_rate').value),
+                weight_decay: parseFloat(document.getElementById('weight_decay').value),
+                n_residual_block: parseInt(document.getElementById('n_residual_block').value),
+                resnet_channels: parseInt(document.getElementById('resnet_channels').value),
+                history_size: parseInt(document.getElementById('history_size').value),
+                hidden_size: parseInt(document.getElementById('hidden_size').value),
+                cpuct: parseFloat(document.getElementById('cpuct').value),
+                tau: parseFloat(document.getElementById('tau').value),
+                tau_limit: parseInt(document.getElementById('tau_limit').value),
+                dirichlet_epsilon: parseFloat(document.getElementById('dirichlet_epsilon').value),
+                dirichlet_alpha: parseFloat(document.getElementById('dirichlet_alpha').value),
+                max_dataset_size: parseInt(document.getElementById('max_dataset_size').value),
+                games_per_iteration: parseInt(document.getElementById('games_per_iteration').value),
+                action_size: 49 // 7x7
+            };
+        }
+
+        function updateMetric(id, value) {
+            document.getElementById(id).textContent = value;
+        }
+
+        function updateProgress(percent) {
+            const fill = document.getElementById('progressFill');
+            const text = document.getElementById('progressText');
+            fill.style.width = percent + '%';
+            text.textContent = Math.round(percent) + '%';
+        }
+
+        function logMessage(message, type = 'normal') {
+            const logContainer = document.getElementById('logContainer');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.textContent = `[${timestamp}] ${message}`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function drawBoard(state) {
+            const canvas = document.getElementById('gameBoard');
+            const ctx = canvas.getContext('2d');
+            const cellSize = 60;
+            
+            // 背景
+            ctx.fillStyle = '#daa520';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // グリッド
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 7; i++) {
+                ctx.beginPath();
+                ctx.moveTo(cellSize / 2, i * cellSize + cellSize / 2);
+                ctx.lineTo(canvas.width - cellSize / 2, i * cellSize + cellSize / 2);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(i * cellSize + cellSize / 2, cellSize / 2);
+                ctx.lineTo(i * cellSize + cellSize / 2, canvas.height - cellSize / 2);
+                ctx.stroke();
+            }
+            
+            // 石
+            for (let x = 0; x < 7; x++) {
+                for (let y = 0; y < 7; y++) {
+                    if (state[x][y] !== 0) {
+                        ctx.beginPath();
+                        ctx.arc(y * cellSize + cellSize / 2, x * cellSize + cellSize / 2, 
+                               cellSize * 0.4, 0, 2 * Math.PI);
+                        ctx.fillStyle = state[x][y] === -1 ? '#000' : '#fff';
+                        ctx.fill();
+                        ctx.strokeStyle = '#000';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('lossChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Total Loss',
+                            data: [],
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Policy Loss',
+                            data: [],
+                            borderColor: '#f5576c',
+                            backgroundColor: 'rgba(245, 87, 108, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Value Loss',
+                            data: [],
+                            borderColor: '#4facfe',
+                            backgroundColor: 'rgba(79, 172, 254, 0.1)',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Loss の推移'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChart() {
+            if (!chart) return;
+            
+            const maxPoints = 100;
+            const labels = Array.from({length: Math.min(lossHistory.total.length, maxPoints)}, (_, i) => i + 1);
+            
+            chart.data.labels = labels;
+            chart.data.datasets[0].data = lossHistory.total.slice(-maxPoints);
+            chart.data.datasets[1].data = lossHistory.policy.slice(-maxPoints);
+            chart.data.datasets[2].data = lossHistory.value.slice(-maxPoints);
+            chart.update('none');
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // ==================== イベントリスナー ====================
+        document.getElementById('startBtn').addEventListener('click', () => {
+            if (!isTraining) {
+                isTraining = true;
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('stopBtn').disabled = false;
+                document.getElementById('startBtn').classList.add('training');
+                trainingLoop();
+            }
+        });
+
+        document.getElementById('stopBtn').addEventListener('click', () => {
+            isTraining = false;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('startBtn').classList.remove('training');
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            if (confirm('すべてのデータをリセットしますか?')) {
+                dataset = [];
+                iteration = 0;
+                totalGames = 0;
+                lossHistory = { policy: [], value: [], total: [] };
+                
+                updateMetric('iteration', 0);
+                updateMetric('totalGames', 0);
+                updateMetric('datasetSize', 0);
+                updateMetric('currentEpoch', 0);
+                updateMetric('policyLoss', '0.000');
+                updateMetric('valueLoss', '0.000');
+                updateProgress(0);
+                
+                document.getElementById('logContainer').innerHTML = '';
+                if (chart) {
+                    chart.data.labels = [];
+                    chart.data.datasets.forEach(dataset => dataset.data = []);
+                    chart.update();
+                }
+                
+                const canvas = document.getElementById('gameBoard');
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawBoard(Array(7).fill(0).map(() => Array(7).fill(0)));
+                
+                logMessage('すべてのデータをリセットしました', 'info');
+            }
+        });
+
+        // ==================== 初期化 ====================
+        window.addEventListener('load', () => {
+            initChart();
+            drawBoard(Array(7).fill(0).map(() => Array(7).fill(0)));
+            logMessage('システムを初期化しました', 'success');
+            logMessage('「開始」ボタンをクリックして学習を開始してください', 'info');
+        });
+    </script>
+</body>
+</html>
