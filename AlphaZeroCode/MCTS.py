@@ -81,6 +81,9 @@ class MCTS():
     def select(self, node):
         """ 選択
         Ｑ（相手にとっては－Ｑ）＋Ｕの最大値から、最良の行動を選ぶ
+
+        backup() は各ノードに「そのノード自身の手番から見た価値」を積む。
+        子ノードの手番は node の相手なので、node にとっての価値は -Q になる。
         """
         pucts = [] # PUCTの値
         cpuct = self.CFG.cpuct # 1-6
@@ -96,7 +99,7 @@ class MCTS():
             n = child_node.n
             Q = child_node.Q
             U = cpuct * p * sqrt(s) / (1 + n)
-            pucts.append(Q + U)
+            pucts.append(-Q + U)
   
         max_index = np.argmax(pucts)
         next_node = node.child_nodes[max_index]

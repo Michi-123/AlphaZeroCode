@@ -1,7 +1,6 @@
 __pycache__/
 *.pyc
 
-# training artifacts
-trainGomoku/models/
+# training artifacts (datasets are large; models are kept)
 trainGomoku/data/
 trainGomoku/hpsearch/
