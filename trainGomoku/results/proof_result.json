@@ -1,0 +1,1362 @@
+{
+  "config": "board=7x7 row=5 | blocks=3 ch=64 hidden=128 hist=2 | sims=100 cpuct=1.5 alpha=0.3 tau_limit=12 | games/iter=10 epoch=3 bs=64 lr=0.01 | device=cpu",
+  "model": "models/gomoku_7x7_cpu.pt",
+  "calibration": {
+    "L1_vs_random": {
+      "win": 12,
+      "draw": 0,
+      "lose": 0,
+      "score_rate": 1.0,
+      "games": 12,
+      "seconds": 0.0
+    },
+    "L2_vs_random": {
+      "win": 12,
+      "draw": 0,
+      "lose": 0,
+      "score_rate": 1.0,
+      "games": 12,
+      "seconds": 0.2
+    },
+    "L3_vs_random": {
+      "win": 12,
+      "draw": 0,
+      "lose": 0,
+      "score_rate": 1.0,
+      "games": 12,
+      "seconds": 3.5
+    },
+    "L3_vs_L1": {
+      "win": 0,
+      "draw": 12,
+      "lose": 0,
+      "score_rate": 0.5,
+      "games": 12
+    }
+  },
+  "results": {
+    "L1": {
+      "engine": "HumanAlgorithm-1 (L1 ルールのみ(先読みなし))",
+      "games": 24,
+      "win": 0,
+      "draw": 0,
+      "lose": 24,
+      "win_rate": 0.0,
+      "score_rate": 0.0,
+      "ci95": [
+        0.0,
+        0.13798057582897535
+      ],
+      "p_value": 1.0,
+      "elo": -2399.9998262821205,
+      "as_first": {
+        "win": 0,
+        "draw": 0,
+        "lose": 12
+      },
+      "as_second": {
+        "win": 0,
+        "draw": 0,
+        "lose": 12
+      },
+      "seconds": 79.2,
+      "sample_games": [
+        {
+          "result": "lose",
+          "winner": 1,
+          "moves": 12,
+          "az_player": -1,
+          "history": [
+            2,
+            15,
+            16,
+            23,
+            31,
+            24,
+            18,
+            25,
+            33,
+            26,
+            45,
+            22
+          ],
+          "board": [
+            [
+              0,
+              0,
+              -1,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              -1,
+              0,
+              -1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              1,
+              1,
+              1,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              -1,
+              0,
+              -1,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              -1,
+              0,
+              0,
+              0
+            ]
+          ]
+        },
+        {
+          "result": "lose",
+          "winner": -1,
+          "moves": 9,
+          "az_player": 1,
+          "history": [
+            2,
+            15,
+            23,
+            37,
+            16,
+            31,
+            30,
+            18,
+            9
+          ],
+          "board": [
+            [
+              0,
+              0,
+              -1,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              -1,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              -1,
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              -1,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              -1,
+              1,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ]
+        }
+      ],
+      "all_games": [
+        {
+          "pair": 0,
+          "side": "first",
+          "result": "lose",
+          "moves": 12,
+          "opening": [
+            2,
+            15
+          ]
+        },
+        {
+          "pair": 0,
+          "side": "second",
+          "result": "lose",
+          "moves": 9,
+          "opening": [
+            2,
+            15
+          ]
+        },
+        {
+          "pair": 1,
+          "side": "first",
+          "result": "lose",
+          "moves": 10,
+          "opening": [
+            28,
+            30
+          ]
+        },
+        {
+          "pair": 1,
+          "side": "second",
+          "result": "lose",
+          "moves": 9,
+          "opening": [
+            28,
+            30
+          ]
+        },
+        {
+          "pair": 2,
+          "side": "first",
+          "result": "lose",
+          "moves": 10,
+          "opening": [
+            3,
+            19
+          ]
+        },
+        {
+          "pair": 2,
+          "side": "second",
+          "result": "lose",
+          "moves": 9,
+          "opening": [
+            3,
+            19
+          ]
+        },
+        {
+          "pair": 3,
+          "side": "first",
+          "result": "lose",
+          "moves": 12,
+          "opening": [
+            34,
+            45
+          ]
+        },
+        {
+          "pair": 3,
+          "side": "second",
+          "result": "lose",
+          "moves": 9,
+          "opening": [
+            34,
+            45
+          ]
+        },
+        {
+          "pair": 4,
+          "side": "first",
+          "result": "lose",
+          "moves": 14,
+          "opening": [
+            36,
+            44
+          ]
+        },
+        {
+          "pair": 4,
+          "side": "second",
+          "result": "lose",
+          "moves": 9,
+          "opening": [
+            36,
+            44
+          ]
+        },
+        {
+          "pair": 5,
+          "side": "first",
+          "result": "lose",
+          "moves": 10,
+          "opening": [
+            48,
+            14
+          ]
+        },
+        {
+          "pair": 5,
+          "side": "second",
+          "result": "lose",
+          "moves": 13,
+          "opening": [
+            48,
+            14
+          ]
+        },
+        {
+          "pair": 6,
+          "side": "first",
+          "result": "lose",
+          "moves": 12,
+          "opening": [
+            30,
+            27
+          ]
+        },
+        {
+          "pair": 6,
+          "side": "second",
+          "result": "lose",
+          "moves": 9,
+          "opening": [
+            30,
+            27
+          ]
+        },
+        {
+          "pair": 7,
+          "side": "first",
+          "result": "lose",
+          "moves": 10,
+          "opening": [
+            8,
+            23
+          ]
+        },
+        {
+          "pair": 7,
+          "side": "second",
+          "result": "lose",
+          "moves": 9,
+          "opening": [
+            8,
+            23
+          ]
+        },
+        {
+          "pair": 8,
+          "side": "first",
+          "result": "lose",
+          "moves": 12,
+          "opening": [
+            29,
+            40
+          ]
+        },
+        {
+          "pair": 8,
+          "side": "second",
+          "result": "lose",
+          "moves": 9,
+          "opening": [
+            29,
+            40
+          ]
+        },
+        {
+          "pair": 9,
+          "side": "first",
+          "result": "lose",
+          "moves": 12,
+          "opening": [
+            0,
+            27
+          ]
+        },
+        {
+          "pair": 9,
+          "side": "second",
+          "result": "lose",
+          "moves": 13,
+          "opening": [
+            0,
+            27
+          ]
+        },
+        {
+          "pair": 10,
+          "side": "first",
+          "result": "lose",
+          "moves": 10,
+          "opening": [
+            28,
+            9
+          ]
+        },
+        {
+          "pair": 10,
+          "side": "second",
+          "result": "lose",
+          "moves": 9,
+          "opening": [
+            28,
+            9
+          ]
+        },
+        {
+          "pair": 11,
+          "side": "first",
+          "result": "lose",
+          "moves": 10,
+          "opening": [
+            2,
+            39
+          ]
+        },
+        {
+          "pair": 11,
+          "side": "second",
+          "result": "lose",
+          "moves": 13,
+          "opening": [
+            2,
+            39
+          ]
+        }
+      ]
+    },
+    "L2": {
+      "engine": "HumanAlgorithm-2 (L2 ルール+2手読み)",
+      "games": 24,
+      "win": 0,
+      "draw": 0,
+      "lose": 24,
+      "win_rate": 0.0,
+      "score_rate": 0.0,
+      "ci95": [
+        0.0,
+        0.13798057582897535
+      ],
+      "p_value": 1.0,
+      "elo": -2399.9998262821205,
+      "as_first": {
+        "win": 0,
+        "draw": 0,
+        "lose": 12
+      },
+      "as_second": {
+        "win": 0,
+        "draw": 0,
+        "lose": 12
+      },
+      "seconds": 99.6,
+      "sample_games": [
+        {
+          "result": "lose",
+          "winner": 1,
+          "moves": 16,
+          "az_player": -1,
+          "history": [
+            24,
+            33,
+            9,
+            30,
+            31,
+            17,
+            26,
+            23,
+            41,
+            16,
+            0,
+            18,
+            12,
+            19,
+            20,
+            15
+          ],
+          "board": [
+            [
+              -1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              -1,
+              0,
+              0,
+              -1,
+              0
+            ],
+            [
+              0,
+              1,
+              1,
+              1,
+              1,
+              1,
+              -1
+            ],
+            [
+              0,
+              0,
+              1,
+              -1,
+              0,
+              -1,
+              0
+            ],
+            [
+              0,
+              0,
+              1,
+              -1,
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              -1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ]
+        },
+        {
+          "result": "lose",
+          "winner": -1,
+          "moves": 11,
+          "az_player": 1,
+          "history": [
+            24,
+            33,
+            30,
+            19,
+            26,
+            42,
+            18,
+            25,
+            12,
+            11,
+            36
+          ],
+          "board": [
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              1,
+              -1,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              -1,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              -1,
+              1,
+              -1,
+              0
+            ],
+            [
+              0,
+              0,
+              -1,
+              0,
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              -1,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ]
+        }
+      ],
+      "all_games": [
+        {
+          "pair": 0,
+          "side": "first",
+          "result": "lose",
+          "moves": 16,
+          "opening": [
+            24,
+            33
+          ]
+        },
+        {
+          "pair": 0,
+          "side": "second",
+          "result": "lose",
+          "moves": 11,
+          "opening": [
+            24,
+            33
+          ]
+        },
+        {
+          "pair": 1,
+          "side": "first",
+          "result": "lose",
+          "moves": 10,
+          "opening": [
+            0,
+            34
+          ]
+        },
+        {
+          "pair": 1,
+          "side": "second",
+          "result": "lose",
+          "moves": 13,
+          "opening": [
+            0,
+            34
+          ]
+        },
+        {
+          "pair": 2,
+          "side": "first",
+          "result": "lose",
+          "moves": 12,
+          "opening": [
+            18,
+            31
+          ]
+        },
+        {
+          "pair": 2,
+          "side": "second",
+          "result": "lose",
+          "moves": 9,
+          "opening": [
+            18,
+            31
+          ]
+        },
+        {
+          "pair": 3,
+          "side": "first",
+          "result": "lose",
+          "moves": 14,
+          "opening": [
+            44,
+            24
+          ]
+        },
+        {
+          "pair": 3,
+          "side": "second",
+          "result": "lose",
+          "moves": 9,
+          "opening": [
+            44,
+            24
+          ]
+        },
+        {
+          "pair": 4,
+          "side": "first",
+          "result": "lose",
+          "moves": 10,
+          "opening": [
+            46,
+            20
+          ]
+        },
+        {
+          "pair": 4,
+          "side": "second",
+          "result": "lose",
+          "moves": 9,
+          "opening": [
+            46,
+            20
+          ]
+        },
+        {
+          "pair": 5,
+          "side": "first",
+          "result": "lose",
+          "moves": 12,
+          "opening": [
+            5,
+            8
+          ]
+        },
+        {
+          "pair": 5,
+          "side": "second",
+          "result": "lose",
+          "moves": 9,
+          "opening": [
+            5,
+            8
+          ]
+        },
+        {
+          "pair": 6,
+          "side": "first",
+          "result": "lose",
+          "moves": 16,
+          "opening": [
+            0,
+            17
+          ]
+        },
+        {
+          "pair": 6,
+          "side": "second",
+          "result": "lose",
+          "moves": 15,
+          "opening": [
+            0,
+            17
+          ]
+        },
+        {
+          "pair": 7,
+          "side": "first",
+          "result": "lose",
+          "moves": 18,
+          "opening": [
+            42,
+            0
+          ]
+        },
+        {
+          "pair": 7,
+          "side": "second",
+          "result": "lose",
+          "moves": 11,
+          "opening": [
+            42,
+            0
+          ]
+        },
+        {
+          "pair": 8,
+          "side": "first",
+          "result": "lose",
+          "moves": 12,
+          "opening": [
+            13,
+            8
+          ]
+        },
+        {
+          "pair": 8,
+          "side": "second",
+          "result": "lose",
+          "moves": 9,
+          "opening": [
+            13,
+            8
+          ]
+        },
+        {
+          "pair": 9,
+          "side": "first",
+          "result": "lose",
+          "moves": 12,
+          "opening": [
+            7,
+            33
+          ]
+        },
+        {
+          "pair": 9,
+          "side": "second",
+          "result": "lose",
+          "moves": 13,
+          "opening": [
+            7,
+            33
+          ]
+        },
+        {
+          "pair": 10,
+          "side": "first",
+          "result": "lose",
+          "moves": 10,
+          "opening": [
+            7,
+            5
+          ]
+        },
+        {
+          "pair": 10,
+          "side": "second",
+          "result": "lose",
+          "moves": 15,
+          "opening": [
+            7,
+            5
+          ]
+        },
+        {
+          "pair": 11,
+          "side": "first",
+          "result": "lose",
+          "moves": 14,
+          "opening": [
+            0,
+            1
+          ]
+        },
+        {
+          "pair": 11,
+          "side": "second",
+          "result": "lose",
+          "moves": 13,
+          "opening": [
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    "L3": {
+      "engine": "HumanAlgorithm-3 (L3 ルール+4手読み(α-β))",
+      "games": 24,
+      "win": 0,
+      "draw": 0,
+      "lose": 24,
+      "win_rate": 0.0,
+      "score_rate": 0.0,
+      "ci95": [
+        0.0,
+        0.13798057582897535
+      ],
+      "p_value": 1.0,
+      "elo": -2399.9998262821205,
+      "as_first": {
+        "win": 0,
+        "draw": 0,
+        "lose": 12
+      },
+      "as_second": {
+        "win": 0,
+        "draw": 0,
+        "lose": 12
+      },
+      "seconds": 103.6,
+      "sample_games": [
+        {
+          "result": "lose",
+          "winner": 1,
+          "moves": 12,
+          "az_player": -1,
+          "history": [
+            25,
+            48,
+            4,
+            18,
+            31,
+            24,
+            23,
+            30,
+            41,
+            36,
+            26,
+            12
+          ],
+          "board": [
+            [
+              0,
+              0,
+              0,
+              0,
+              -1,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              -1,
+              1,
+              -1,
+              -1,
+              0
+            ],
+            [
+              0,
+              0,
+              1,
+              -1,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              -1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1
+            ]
+          ]
+        },
+        {
+          "result": "lose",
+          "winner": -1,
+          "moves": 11,
+          "az_player": 1,
+          "history": [
+            25,
+            48,
+            31,
+            24,
+            32,
+            18,
+            30,
+            0,
+            33,
+            40,
+            29
+          ],
+          "board": [
+            [
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              1,
+              -1,
+              0,
+              0
+            ],
+            [
+              0,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1
+            ]
+          ]
+        }
+      ],
+      "all_games": [
+        {
+          "pair": 0,
+          "side": "first",
+          "result": "lose",
+          "moves": 12,
+          "opening": [
+            25,
+            48
+          ]
+        },
+        {
+          "pair": 0,
+          "side": "second",
+          "result": "lose",
+          "moves": 11,
+          "opening": [
+            25,
+            48
+          ]
+        },
+        {
+          "pair": 1,
+          "side": "first",
+          "result": "lose",
+          "moves": 12,
+          "opening": [
+            48,
+            38
+          ]
+        },
+        {
+          "pair": 1,
+          "side": "second",
+          "result": "lose",
+          "moves": 13,
+          "opening": [
+            48,
+            38
+          ]
+        },
+        {
+          "pair": 2,
+          "side": "first",
+          "result": "lose",
+          "moves": 10,
+          "opening": [
+            25,
+            36
+          ]
+        },
+        {
+          "pair": 2,
+          "side": "second",
+          "result": "lose",
+          "moves": 9,
+          "opening": [
+            25,
+            36
+          ]
+        },
+        {
+          "pair": 3,
+          "side": "first",
+          "result": "lose",
+          "moves": 16,
+          "opening": [
+            34,
+            47
+          ]
+        },
+        {
+          "pair": 3,
+          "side": "second",
+          "result": "lose",
+          "moves": 11,
+          "opening": [
+            34,
+            47
+          ]
+        },
+        {
+          "pair": 4,
+          "side": "first",
+          "result": "lose",
+          "moves": 10,
+          "opening": [
+            0,
+            46
+          ]
+        },
+        {
+          "pair": 4,
+          "side": "second",
+          "result": "lose",
+          "moves": 13,
+          "opening": [
+            0,
+            46
+          ]
+        },
+        {
+          "pair": 5,
+          "side": "first",
+          "result": "lose",
+          "moves": 14,
+          "opening": [
+            4,
+            5
+          ]
+        },
+        {
+          "pair": 5,
+          "side": "second",
+          "result": "lose",
+          "moves": 13,
+          "opening": [
+            4,
+            5
+          ]
+        },
+        {
+          "pair": 6,
+          "side": "first",
+          "result": "lose",
+          "moves": 16,
+          "opening": [
+            27,
+            2
+          ]
+        },
+        {
+          "pair": 6,
+          "side": "second",
+          "result": "lose",
+          "moves": 9,
+          "opening": [
+            27,
+            2
+          ]
+        },
+        {
+          "pair": 7,
+          "side": "first",
+          "result": "lose",
+          "moves": 12,
+          "opening": [
+            25,
+            38
+          ]
+        },
+        {
+          "pair": 7,
+          "side": "second",
+          "result": "lose",
+          "moves": 11,
+          "opening": [
+            25,
+            38
+          ]
+        },
+        {
+          "pair": 8,
+          "side": "first",
+          "result": "lose",
+          "moves": 14,
+          "opening": [
+            32,
+            25
+          ]
+        },
+        {
+          "pair": 8,
+          "side": "second",
+          "result": "lose",
+          "moves": 13,
+          "opening": [
+            32,
+            25
+          ]
+        },
+        {
+          "pair": 9,
+          "side": "first",
+          "result": "lose",
+          "moves": 10,
+          "opening": [
+            4,
+            10
+          ]
+        },
+        {
+          "pair": 9,
+          "side": "second",
+          "result": "lose",
+          "moves": 11,
+          "opening": [
+            4,
+            10
+          ]
+        },
+        {
+          "pair": 10,
+          "side": "first",
+          "result": "lose",
+          "moves": 12,
+          "opening": [
+            1,
+            16
+          ]
+        },
+        {
+          "pair": 10,
+          "side": "second",
+          "result": "lose",
+          "moves": 13,
+          "opening": [
+            1,
+            16
+          ]
+        },
+        {
+          "pair": 11,
+          "side": "first",
+          "result": "lose",
+          "moves": 16,
+          "opening": [
+            19,
+            48
+          ]
+        },
+        {
+          "pair": 11,
+          "side": "second",
+          "result": "lose",
+          "moves": 11,
+          "opening": [
+            19,
+            48
+          ]
+        }
+      ]
+    }
+  },
+  "extra": {
+    "AZ vs ランダム (20局)": "スコア 95.0% (19勝 0分 1敗)",
+    "戦術正解率 (1手詰め 200局面)": "11.0% (ランダム推測なら 6.2%)"
+  }
+}
