@@ -1,12 +1,13 @@
 __pycache__/
 *.pyc
 
-# generated datasets
+# 生成データセット（数十MBになるので残さない）
 trainGomoku/data/
 trainGomoku/hpsearch/
 
-# 学習実行中は成果物が毎イテレーション書き換わるため一時的に除外する。
-# 実行が終わったらこのセクションを外して最終成果物をコミットすること。
-trainGomoku/models/
-trainGomoku/results/
-trainGomoku/train_run.log
+# 実行時の生ログ。要点は results/ のレポートと CSV に残る。
+trainGomoku/*.log
+
+# 10イテレーションごとの中間チェックポイント。
+# 最終モデルと best モデルはコミットするのでこちらは残さない。
+trainGomoku/models/checkpoint/
