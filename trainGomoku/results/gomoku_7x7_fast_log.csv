@@ -1,2 +1,0 @@
-iteration,lr,dataset,policy_loss,value_loss,win_rate,score_rate,tactic_acc,selfplay_sec,train_sec
-1,0.02,1434,1.22174,0.07381,,,,173.9,4.5

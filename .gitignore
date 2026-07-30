@@ -1,6 +1,12 @@
 __pycache__/
 *.pyc
 
-# training artifacts (datasets are large; models are kept)
+# generated datasets
 trainGomoku/data/
 trainGomoku/hpsearch/
+
+# 学習実行中は成果物が毎イテレーション書き換わるため一時的に除外する。
+# 実行が終わったらこのセクションを外して最終成果物をコミットすること。
+trainGomoku/models/
+trainGomoku/results/
+trainGomoku/train_run.log

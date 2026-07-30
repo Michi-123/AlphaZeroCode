@@ -1,4 +1,0 @@
-n_residual_block:3
-resnet_channels:64
-history_size:2
-hidden_size:128
