@@ -1,0 +1,15 @@
+==============================================================================
+AlphaZero  7x7 Gomoku (5 in a row)
+board=7x7 row=5 | blocks=3 ch=64 hidden=128 hist=2 | sims=50 cpuct=1.5 alpha=0.3 tau_limit=10 | games/iter=8 epoch=2 bs=64 lr=0.02 | device=cpu
+==============================================================================
+model parameters: 0.27M (268,613)
+
+--- bootstrap phase ---
+[bootstrap] 2000 samples / 234 games  (win=1000, block=1000, double-threat=147)
+  boot round 1/6  pi_loss=2.8903 v_loss=0.3093  tactic=17.5%
+  boot round 2/6  pi_loss=1.6542 v_loss=0.1784  tactic=13.0%
+  boot round 3/6  pi_loss=1.1236 v_loss=0.0956  tactic=11.0%
+  boot round 4/6  pi_loss=0.9708 v_loss=0.0530  tactic=12.5%
+  boot round 5/6  pi_loss=0.9160 v_loss=0.0390  tactic=14.5%
+  boot round 6/6  pi_loss=0.8898 v_loss=0.0341  tactic=12.5%
+iter   1/40  lr=0.0200  data=  1434  pi_loss=1.2217  v_loss=0.0738  selfplay=174s train=4s
