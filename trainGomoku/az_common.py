@@ -178,7 +178,9 @@ def play_vs_random(env, model, CFG, n_games=20, az_first=True, seed=None):
                 state, reward, done = env.step(action)
                 moves += 1
                 if done:
-                    result = 'win' if reward == 1 else 'draw'
+                    # reward は「着手後に手番となる側」から見た値なので、
+                    # 打った本人が勝った場合は -1 になる（Gomoku.py 参照）
+                    result = 'win' if reward == -1 else 'draw'
                     break
             else:
                 legal = env.get_legal_actions()
@@ -189,7 +191,7 @@ def play_vs_random(env, model, CFG, n_games=20, az_first=True, seed=None):
                 state, reward, done = env.step(action)
                 moves += 1
                 if done:
-                    result = 'lose' if reward == 1 else 'draw'
+                    result = 'lose' if reward == -1 else 'draw'
                     break
                 node = util.get_next_node(node, action, env)
 

@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+
+# training artifacts
+trainGomoku/models/
+trainGomoku/data/
+trainGomoku/hpsearch/
