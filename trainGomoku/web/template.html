@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AlphaZero 五目並べ — ブラウザ対局</title>
+<style>
+  :root{
+    --bg:#f4f1ea; --panel:#fff; --line:#c9a227; --board:#e8c887;
+    --ink:#23201b; --sub:#6b6459; --accent:#3b6ea5; --bad:#b4453c;
+    --good:#2f7d4f; --border:#ddd6c9;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#1b1917; --panel:#26231f; --board:#8a6a3a; --line:#5c4a24;
+           --ink:#ece7dd; --sub:#a49b8c; --accent:#7aa9dc; --border:#3a352e; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:24px 16px;background:var(--bg);color:var(--ink);
+       font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+       line-height:1.6;}
+  .wrap{max-width:980px;margin:0 auto}
+  h1{font-size:1.5rem;margin:0 0 4px}
+  .sub{color:var(--sub);font-size:.87rem;margin-bottom:18px}
+  .cols{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px}
+  .side{flex:1 1 300px;min-width:280px}
+  /* ---- 盤 ---- */
+  #boardWrap{flex:0 0 auto}
+  #board{display:grid;background:var(--board);border-radius:8px;padding:10px;
+         box-shadow:0 4px 16px rgba(0,0,0,.18)}
+  .cell{position:relative;background:none;border:0;padding:0;cursor:pointer;
+        width:52px;height:52px}
+  .cell:disabled{cursor:default}
+  .cell::before,.cell::after{content:"";position:absolute;background:var(--line);opacity:.85}
+  .cell::before{left:50%;top:0;bottom:0;width:1px;transform:translateX(-50%)}
+  .cell::after{top:50%;left:0;right:0;height:1px;transform:translateY(-50%)}
+  .cell.r0::before{top:50%} .cell.r6::before{bottom:50%}
+  .cell.c0::after{left:50%} .cell.c6::after{right:50%}
+  .stone{position:absolute;inset:6px;border-radius:50%;z-index:2}
+  .stone.black{background:radial-gradient(circle at 34% 30%,#6a6a6a,#111 70%)}
+  .stone.white{background:radial-gradient(circle at 34% 30%,#fff,#c9c4ba 72%)}
+  .stone.last{box-shadow:0 0 0 3px var(--accent)}
+  .hint{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;
+        font-size:.62rem;color:#0008;font-weight:700}
+  @media (prefers-color-scheme: dark){ .hint{color:#fff9} }
+  /* ---- 操作 ---- */
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}
+  label{font-size:.85rem;color:var(--sub)}
+  select,button{font:inherit;padding:6px 12px;border-radius:8px;
+                border:1px solid var(--border);background:var(--panel);color:var(--ink);cursor:pointer}
+  button.primary{background:var(--accent);color:#fff;border-color:transparent}
+  button:disabled{opacity:.5;cursor:default}
+  #status{font-weight:600;margin:10px 0 4px;min-height:1.6em}
+  .bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin:6px 0 2px}
+  .bar>div{height:100%;width:0;background:var(--accent);transition:width .08s linear}
+  table{width:100%;border-collapse:collapse;font-size:.85rem;margin-top:6px}
+  th,td{text-align:left;padding:3px 6px;border-bottom:1px solid var(--border)}
+  th{color:var(--sub);font-weight:600}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  .note{font-size:.8rem;color:var(--sub);margin-top:14px}
+  code{background:var(--bg);padding:1px 5px;border-radius:4px;font-size:.85em}
+  #selftest{font-size:.8rem;padding:8px 10px;border-radius:8px;margin-bottom:14px;
+            border:1px solid var(--border);color:var(--sub)}
+  #selftest.ok{border-color:#2f7d4f66;color:#2f7d4f}
+  #selftest.ng{border-color:#b4453c66;color:var(--bad)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>AlphaZero 五目並べ — ブラウザ対局</h1>
+  <div class="sub" id="subtitle"></div>
+
+  <div id="selftest">実装の自己診断を実行中…</div>
+
+  <div class="cols">
+    <div id="boardWrap">
+      <div id="board"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="newGame">新しい対局</button>
+        <button id="undo">待った</button>
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="panel">
+        <div id="status">読み込み中…</div>
+        <div class="bar"><div id="prog"></div></div>
+
+        <div class="row">
+          <label for="human">あなたの手番</label>
+          <select id="human">
+            <option value="-1">先手（黒）</option>
+            <option value="1">後手（白）</option>
+          </select>
+        </div>
+        <div class="row">
+          <label for="sims">思考の強さ</label>
+          <select id="sims"></select>
+        </div>
+        <div class="row">
+          <label><input type="checkbox" id="showHint"> AIの候補手を盤上に表示</label>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <strong style="font-size:.9rem">AI の評価</strong>
+        <div id="evalLine" style="font-size:.85rem;color:var(--sub)">まだ思考していません</div>
+        <table id="topMoves"><thead>
+          <tr><th>候補</th><th class="num">訪問</th><th class="num">事前確率</th></tr>
+        </thead><tbody></tbody></table>
+      </div>
+
+      <div class="note">
+        Python で学習した重みをそのまま埋め込み、推論と MCTS を JavaScript で
+        再実装しています。通信も追加ライブラリも不要で、このファイル1枚で動きます。
+        <br><br>
+        探索木は1手ごとに作り直します（Python 側は前の手の部分木を再利用するため、
+        同じシミュレーション回数でも読みの量はこちらの方がやや少なくなります）。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script id="weights" type="application/octet-stream">__WEIGHTS_B64__</script>
+<script>
+"use strict";
+const META = "__META_JSON__";
+
+/* =====================================================================
+   1. 重みの取り出し
+   ===================================================================== */
+function b64ToFloat32(b64){
+  const bin = atob(b64.trim());
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Float32Array(bytes.buffer);
+}
+const RAW = b64ToFloat32(document.getElementById('weights').textContent);
+function T(name){
+  const m = META.manifest[name];
+  if (!m) throw new Error('missing tensor: ' + name);
+  return RAW.subarray(m.offset, m.offset + m.size);
+}
+
+const W  = META.board_width;        // 7
+const N  = W * W;                   // 49
+const C  = META.resnet_channels;    // 64
+const NB = META.n_residual_block;   // 3
+const H  = META.history_size;       // 2
+const IN = META.in_channels;        // 5
+const HID = META.hidden_size;       // 128
+const ROW = META.row;               // 5
+const FIRST = META.first_player;    // -1 (黒)
+
+const w_conv1 = T('conv1.w'), b_conv1 = T('conv1.b');
+const blocks = [];
+for (let i = 0; i < NB; i++){
+  blocks.push({ w1:T(`res${i}.w1`), b1:T(`res${i}.b1`),
+                w2:T(`res${i}.w2`), b2:T(`res${i}.b2`) });
+}
+const w_pol1 = T('pol1.w'), b_pol1 = T('pol1.b');
+const w_pol2 = T('pol2.w'), b_pol2 = T('pol2.b');
+const w_val  = T('val.w'),  b_val  = T('val.b');
+const w_fc1  = T('fc1.w'),  b_fc1  = T('fc1.b');
+const w_fc2  = T('fc2.w'),  b_fc2  = T('fc2.b');
+
+/* =====================================================================
+   2. 推論（BN は学習済み重みに畳み込み済みなので Conv と ReLU だけ）
+   ===================================================================== */
+const P  = W + 2;                   // パディング後の一辺 9
+const PN = P * P;                   // 81
+const padBuf = new Float32Array(Math.max(IN, C) * PN);
+const bufA = new Float32Array(C * N);
+const bufB = new Float32Array(C * N);
+const bufC = new Float32Array(C * N);
+const bufP = new Float32Array(N);
+const bufV = new Float32Array(N);
+const bufH = new Float32Array(HID);
+const feat = new Float32Array(IN * N);
+
+function pad(src, ch){
+  padBuf.fill(0, 0, ch * PN);
+  for (let c = 0; c < ch; c++){
+    const s = c * N, d = c * PN;
+    for (let y = 0; y < W; y++){
+      const so = s + y * W, dof = d + (y + 1) * P + 1;
+      for (let x = 0; x < W; x++) padBuf[dof + x] = src[so + x];
+    }
+  }
+}
+
+/* 3x3 / padding=same
+   im2col 方式。入力を [49画素 × (inC*9)] の行列に展開してから
+   重み [outC × (inC*9)] と内積する。内側ループが長く連続アクセスになるため、
+   素朴な6重ループより数倍速い。 */
+const colBuf = new Float32Array(N * Math.max(IN, C) * 9);
+
+function conv3(src, inC, outC, wt, bs, dst){
+  pad(src, inC);
+  const K = inC * 9;
+  for (let y = 0; y < W; y++){
+    for (let x = 0; x < W; x++){
+      const co = (y * W + x) * K;
+      for (let ic = 0; ic < inC; ic++){
+        const pb = ic * PN, wb = co + ic * 9;
+        const r0 = pb + y * P + x, r1 = r0 + P, r2 = r1 + P;
+        colBuf[wb]     = padBuf[r0];
+        colBuf[wb + 1] = padBuf[r0 + 1];
+        colBuf[wb + 2] = padBuf[r0 + 2];
+        colBuf[wb + 3] = padBuf[r1];
+        colBuf[wb + 4] = padBuf[r1 + 1];
+        colBuf[wb + 5] = padBuf[r1 + 2];
+        colBuf[wb + 6] = padBuf[r2];
+        colBuf[wb + 7] = padBuf[r2 + 1];
+        colBuf[wb + 8] = padBuf[r2 + 2];
+      }
+    }
+  }
+  // 出力チャンネルを4本ずつまとめて、col の読み出しを共有する
+  let oc = 0;
+  for (; oc + 3 < outC; oc += 4){
+    const w0 = oc * K, w1 = w0 + K, w2 = w1 + K, w3 = w2 + K;
+    const d0 = oc * N, d1 = d0 + N, d2 = d1 + N, d3 = d2 + N;
+    const b0 = bs[oc], b1 = bs[oc + 1], b2 = bs[oc + 2], b3 = bs[oc + 3];
+    for (let p = 0; p < N; p++){
+      const co = p * K;
+      let a0 = b0, a1 = b1, a2 = b2, a3 = b3;
+      for (let j = 0; j < K; j++){
+        const cv = colBuf[co + j];
+        a0 += wt[w0 + j] * cv;
+        a1 += wt[w1 + j] * cv;
+        a2 += wt[w2 + j] * cv;
+        a3 += wt[w3 + j] * cv;
+      }
+      dst[d0 + p] = a0; dst[d1 + p] = a1; dst[d2 + p] = a2; dst[d3 + p] = a3;
+    }
+  }
+  for (; oc < outC; oc++){
+    const wo = oc * K, bias = bs[oc], dbase = oc * N;
+    for (let p = 0; p < N; p++){
+      const co = p * K;
+      let acc = bias;
+      for (let j = 0; j < K; j++) acc += wt[wo + j] * colBuf[co + j];
+      dst[dbase + p] = acc;
+    }
+  }
+}
+
+/* 1x1 */
+function conv1(src, inC, outC, wt, bs, dst){
+  for (let oc = 0; oc < outC; oc++){
+    const dbase = oc * N, wOC = oc * inC;
+    dst.fill(bs[oc], dbase, dbase + N);
+    for (let ic = 0; ic < inC; ic++){
+      const wv = wt[wOC + ic];
+      if (wv === 0) continue;
+      const sbase = ic * N;
+      for (let i = 0; i < N; i++) dst[dbase + i] += wv * src[sbase + i];
+    }
+  }
+}
+
+function relu(buf, n){ for (let i = 0; i < n; i++) if (buf[i] < 0) buf[i] = 0; }
+
+/**
+ * body → policy / value。
+ * 注意: Python 側は
+ *     for i in range(n_residual_block): x = self.resnet(x)
+ * となっており、self.resnet は n 個のブロックの Sequential。
+ * つまりブロック適用は n 回ではなく n×n 回。ここでも同じにしている。
+ */
+function forward(features){
+  conv3(features, IN, C, w_conv1, b_conv1, bufA);
+  relu(bufA, C * N);
+
+  for (let rep = 0; rep < NB; rep++){
+    for (let j = 0; j < NB; j++){
+      const blk = blocks[j];
+      conv3(bufA, C, C, blk.w1, blk.b1, bufB);
+      relu(bufB, C * N);
+      conv3(bufB, C, C, blk.w2, blk.b2, bufC);
+      for (let i = 0, n = C * N; i < n; i++){
+        const v = bufA[i] + bufC[i];
+        bufA[i] = v < 0 ? 0 : v;
+      }
+    }
+  }
+
+  // policy head: conv3 -> relu -> conv1(1ch) -> relu -> softmax
+  conv3(bufA, C, C, w_pol1, b_pol1, bufB);
+  relu(bufB, C * N);
+  conv1(bufB, C, 1, w_pol2, b_pol2, bufP);
+  relu(bufP, N);
+  let mx = -Infinity;
+  for (let i = 0; i < N; i++) if (bufP[i] > mx) mx = bufP[i];
+  let sum = 0;
+  for (let i = 0; i < N; i++){ bufP[i] = Math.exp(bufP[i] - mx); sum += bufP[i]; }
+  const policy = new Float32Array(N);
+  for (let i = 0; i < N; i++) policy[i] = bufP[i] / sum;
+
+  // value head: conv1(1ch) -> relu -> fc -> relu -> fc -> tanh
+  conv1(bufA, C, 1, w_val, b_val, bufV);
+  relu(bufV, N);
+  for (let h = 0; h < HID; h++){
+    let acc = b_fc1[h];
+    const wo = h * N;
+    for (let i = 0; i < N; i++) acc += w_fc1[wo + i] * bufV[i];
+    bufH[h] = acc < 0 ? 0 : acc;
+  }
+  let vv = b_fc2[0];
+  for (let h = 0; h < HID; h++) vv += w_fc2[h] * bufH[h];
+  return { policy, value: Math.tanh(vv) };
+}
+
+function makeFeatures(states, player){
+  feat.fill(0);
+  for (let i = 0; i < H; i++){
+    const s = states[i], wOff = i * N, bOff = (H + i) * N;
+    for (let j = 0; j < N; j++){
+      if (s[j] === 1) feat[wOff + j] = 1;
+      else if (s[j] === -1) feat[bOff + j] = 1;
+    }
+  }
+  if (player === -1) feat.fill(1, 2 * H * N, 2 * H * N + N);
+  return feat;
+}
+
+/* =====================================================================
+   3. ルール（AlphaZeroCode/env/Gomoku.py と同じ）
+   ===================================================================== */
+const DIRS = [[0,1],[1,0],[1,1],[-1,1]];
+
+function isWin(board, a, player){
+  const r0 = (a / W) | 0, c0 = a % W;
+  for (const [dr, dc] of DIRS){
+    let count = 1;
+    for (const sign of [1, -1]){
+      let r = r0 + dr * sign, c = c0 + dc * sign;
+      while (r >= 0 && r < W && c >= 0 && c < W && board[r * W + c] === player){
+        count++; r += dr * sign; c += dc * sign;
+      }
+    }
+    if (count >= ROW) return true;
+  }
+  return false;
+}
+function isFull(board){
+  for (let i = 0; i < N; i++) if (board[i] === 0) return false;
+  return true;
+}
+function legalMoves(board){
+  const out = [];
+  for (let i = 0; i < N; i++) if (board[i] === 0) out.push(i);
+  return out;
+}
+function nextStates(states, action, player){
+  const nb = Int8Array.from(states[0]);
+  nb[action] = player;
+  const out = [nb];
+  for (let i = 0; i < H - 1; i++) out.push(states[i]);
+  return out;
+}
+
+/* =====================================================================
+   4. MCTS（AlphaZeroCode/MCTS.py と同じ式）
+       PUCT = -Q + cpuct * p * sqrt(親の訪問回数-1) / (1 + 子の訪問回数)
+       評価時は温度0＝訪問回数の argmax で着手する。
+   ===================================================================== */
+const CPUCT = META.cpuct;
+
+function newNode(states, player){
+  return { states, player, children:null, action:-1,
+           n:0, w:0, q:0, p:0, terminal:null };
+}
+
+function expand(node){
+  const r = forward(makeFeatures(node.states, node.player));
+  const board = node.states[0];
+  const kids = [];
+  for (const a of legalMoves(board)){
+    const ns = nextStates(node.states, a, node.player);
+    const child = newNode(ns, -node.player);
+    child.action = a;
+    child.p = r.policy[a];
+    if (isWin(ns[0], a, node.player)) child.terminal = -1;   // 直前に打った側の勝ち
+    else if (isFull(ns[0])) child.terminal = 0;
+    kids.push(child);
+  }
+  node.children = kids;
+  return r.value;
+}
+
+function backup(node, v){ node.n++; node.w += v; node.q = node.w / node.n; }
+
+function select(node){
+  const s = node.n - 1;
+  const root = Math.sqrt(s > 0 ? s : 0);
+  let best = null, bestVal = -Infinity;
+  for (const ch of node.children){
+    const u = CPUCT * ch.p * root / (1 + ch.n);
+    const val = -ch.q + u;
+    if (val > bestVal){ bestVal = val; best = ch; }
+  }
+  return best;
+}
+
+function simulate(node){
+  if (node.terminal !== null){ backup(node, node.terminal); return node.terminal; }
+  if (node.children === null){ const v = expand(node); backup(node, v); return v; }
+  const next = select(node);
+  const v = -simulate(next);
+  backup(node, v);
+  return v;
+}
+
+async function think(board, history, player, sims, onProgress){
+  const states = [Int8Array.from(board)];
+  for (let i = 1; i < H; i++){
+    states.push(history[i] ? Int8Array.from(history[i]) : new Int8Array(N));
+  }
+  const root = newNode(states, player);
+
+  const CHUNK = 4;
+  for (let i = 0; i < sims; i += CHUNK){
+    const upto = Math.min(CHUNK, sims - i);
+    for (let k = 0; k < upto; k++) simulate(root);
+    if (onProgress) onProgress((i + upto) / sims);
+    await new Promise(r => setTimeout(r, 0));
+  }
+
+  let best = null;
+  for (const ch of root.children) if (!best || ch.n > best.n) best = ch;
+  const ranked = root.children.slice().sort((a, b) => b.n - a.n);
+  return { action: best.action, value: root.q, children: ranked, root };
+}
+
+/* =====================================================================
+   5. 自己診断（PyTorch の出力と突き合わせる）
+   ===================================================================== */
+function selfTest(){
+  let maxP = 0, maxV = 0;
+  for (const c of META.reference){
+    const states = c.states.map(s => Int8Array.from(s));
+    const r = forward(makeFeatures(states, c.player));
+    for (let i = 0; i < N; i++) maxP = Math.max(maxP, Math.abs(r.policy[i] - c.policy[i]));
+    maxV = Math.max(maxV, Math.abs(r.value - c.value));
+  }
+  return { maxP, maxV, ok: maxP < 1e-3 && maxV < 1e-3 };
+}
+
+/* =====================================================================
+   6. 画面
+   ===================================================================== */
+const boardEl   = document.getElementById('board');
+const statusEl  = document.getElementById('status');
+const progEl    = document.getElementById('prog');
+const humanSel  = document.getElementById('human');
+const simsSel   = document.getElementById('sims');
+const hintChk   = document.getElementById('showHint');
+const evalLine  = document.getElementById('evalLine');
+const topBody   = document.querySelector('#topMoves tbody');
+
+document.getElementById('subtitle').textContent =
+  `${W}×${W} 盤 / ${ROW}目並べ — ${META.model_name} ` +
+  `(${META.n_residual_block}ブロック × ${META.resnet_channels}ch, ` +
+  `${META.n_params.toLocaleString()} パラメータ)`;
+
+for (const s of [10, 30, 50, 100, 200, 400]){
+  const o = document.createElement('option');
+  o.value = s;
+  o.textContent = `${s} 回` + (s <= 30 ? '（速い）' : s >= 200 ? '（遅い）' : '');
+  if (s === META.default_sims) o.selected = true;
+  simsSel.appendChild(o);
+}
+
+boardEl.style.gridTemplateColumns = `repeat(${W}, 52px)`;
+const cells = [];
+for (let i = 0; i < N; i++){
+  const b = document.createElement('button');
+  b.className = `cell r${(i / W) | 0} c${i % W}`;
+  b.addEventListener('click', () => onHumanMove(i));
+  boardEl.appendChild(b);
+  cells.push(b);
+}
+
+let board, history, turn, over, busy, lastMove, humanPlayer, hints;
+
+function reset(){
+  board = new Int8Array(N);
+  history = [Int8Array.from(board)];
+  turn = FIRST;
+  over = false; busy = false; lastMove = -1; hints = null;
+  humanPlayer = parseInt(humanSel.value, 10);
+  evalLine.textContent = 'まだ思考していません';
+  topBody.innerHTML = '';
+  render();
+  if (turn !== humanPlayer) setTimeout(aiMove, 180);
+  else setStatus('あなたの番です');
+}
+
+function setStatus(t){ statusEl.textContent = t; }
+
+function render(){
+  for (let i = 0; i < N; i++){
+    const cell = cells[i];
+    cell.innerHTML = '';
+    const v = board[i];
+    if (v !== 0){
+      const s = document.createElement('div');
+      s.className = 'stone ' + (v === -1 ? 'black' : 'white') + (i === lastMove ? ' last' : '');
+      cell.appendChild(s);
+    } else if (hints && hints.has(i)){
+      const h = document.createElement('div');
+      h.className = 'hint';
+      h.textContent = hints.get(i);
+      cell.appendChild(h);
+    }
+    cell.disabled = over || busy || v !== 0 || turn !== humanPlayer;
+  }
+}
+
+function finish(winner){
+  over = true;
+  hints = null;
+  if (winner === 0) setStatus('引き分けです');
+  else if (winner === humanPlayer) setStatus('あなたの勝ちです');
+  else setStatus('AI の勝ちです');
+  render();
+}
+
+function applyMove(a, player){
+  board[a] = player;
+  history.unshift(Int8Array.from(board));
+  lastMove = a;
+  if (isWin(board, a, player)){ render(); finish(player); return true; }
+  if (isFull(board)){ render(); finish(0); return true; }
+  turn = -player;
+  render();
+  return false;
+}
+
+function onHumanMove(a){
+  if (over || busy || board[a] !== 0 || turn !== humanPlayer) return;
+  hints = null;
+  if (applyMove(a, humanPlayer)) return;
+  setTimeout(aiMove, 60);
+}
+
+async function aiMove(){
+  if (over) return;
+  busy = true; render();
+  const sims = parseInt(simsSel.value, 10);
+  setStatus('AI が考えています…');
+  progEl.style.width = '0%';
+
+  const t0 = performance.now();
+  const res = await think(board, history, turn, sims, f => {
+    progEl.style.width = (f * 100).toFixed(0) + '%';
+  });
+  const ms = performance.now() - t0;
+  progEl.style.width = '0%';
+
+  // root の Q は「手番側から見た価値」。AI 自身の勝率として表示する。
+  const winPct = ((res.value + 1) / 2 * 100).toFixed(1);
+  evalLine.textContent =
+    `AI の勝率評価 ${winPct}%  /  ${sims} 回探索  /  ${(ms / 1000).toFixed(1)} 秒`;
+
+  topBody.innerHTML = '';
+  for (const ch of res.children.slice(0, 5)){
+    const tr = document.createElement('tr');
+    const rc = `${(ch.action / W) | 0}行 ${ch.action % W}列`;
+    tr.innerHTML = `<td>${rc}</td><td class="num">${ch.n}</td>` +
+                   `<td class="num">${(ch.p * 100).toFixed(1)}%</td>`;
+    topBody.appendChild(tr);
+  }
+
+  if (hintChk.checked){
+    hints = new Map();
+    for (const ch of res.children.slice(0, 5)) if (ch.n > 0) hints.set(ch.action, ch.n);
+  } else hints = null;
+
+  busy = false;
+  const done = applyMove(res.action, turn);
+  if (!done) setStatus('あなたの番です');
+}
+
+function undo(){
+  if (busy) return;
+  // 人間の手とAIの手をまとめて戻す
+  let steps = over ? 1 : 2;
+  while (steps-- > 0 && history.length > 1){
+    history.shift();
+    board = Int8Array.from(history[0]);
+  }
+  over = false; hints = null; lastMove = -1;
+  turn = humanPlayer;
+  setStatus('あなたの番です');
+  render();
+}
+
+document.getElementById('newGame').addEventListener('click', reset);
+document.getElementById('undo').addEventListener('click', undo);
+humanSel.addEventListener('change', reset);
+hintChk.addEventListener('change', () => { if (!hintChk.checked){ hints = null; render(); } });
+
+/* 起動 */
+window.addEventListener('load', () => {
+  const el = document.getElementById('selftest');
+  try{
+    const t0 = performance.now();
+    const r = selfTest();
+    const ms = performance.now() - t0;
+    const per = (ms / META.reference.length).toFixed(0);
+    if (r.ok){
+      el.className = 'ok';
+      el.textContent =
+        `自己診断 OK — PyTorch の出力と一致しています ` +
+        `(${META.reference.length}局面, policy 最大誤差 ${r.maxP.toExponential(1)}, ` +
+        `value 最大誤差 ${r.maxV.toExponential(1)}, 1手の推論 約${per}ms)`;
+    } else {
+      el.className = 'ng';
+      el.textContent =
+        `自己診断 NG — PyTorch と出力がずれています ` +
+        `(policy 最大誤差 ${r.maxP.toExponential(2)}, value 最大誤差 ${r.maxV.toExponential(2)})`;
+    }
+  } catch(e){
+    el.className = 'ng';
+    el.textContent = '自己診断でエラー: ' + e.message;
+  }
+  reset();
+});
+</script>
+</body>
+</html>
