@@ -71,7 +71,7 @@ class MCTS():
         _, reward, done = self.env.step(next_node.action)
 
         """ 探索（相手の手番で） """
-        v = -self.search(next_node, done, reward)
+        v = -self.search(next_node, done, -reward)
 
         """ バックアップ """ 
         self.backup(node, v) 
@@ -84,7 +84,7 @@ class MCTS():
         """
         pucts = [] # PUCTの値
         cpuct = self.CFG.cpuct # 1-6
-        s = node.n - 1 # Σ_b (N(s,b)) と同じこと
+        s = node.n # Σ_b (N(s,b)) と同じこと
         child_nodes = self.util.get_child_nodes(node) # エッジの取得
 
         if node.is_root:
@@ -96,7 +96,7 @@ class MCTS():
             n = child_node.n
             Q = child_node.Q
             U = cpuct * p * sqrt(s) / (1 + n)
-            pucts.append(Q + U)
+            pucts.append(-Q + U)
   
         max_index = np.argmax(pucts)
         next_node = node.child_nodes[max_index]
