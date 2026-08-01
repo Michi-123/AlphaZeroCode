@@ -113,7 +113,7 @@ class Evaluate:
             self.util.show_board(state, self.render_mode)
 
             if done:
-                win_human += reward * self.CFG.first_player
+                win_human += reward
                 break
 
             # ここは、player_human に入れるか
@@ -183,7 +183,7 @@ class Evaluate:
             self.util.show_board(state, self.render_mode)
 
             if done:
-                win_human -= reward
+                win_human += reward
                 break
 
             node = self.util.get_next_node(node, action, env)

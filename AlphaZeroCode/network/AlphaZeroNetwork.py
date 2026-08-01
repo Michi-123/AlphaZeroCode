@@ -115,8 +115,7 @@ class AlphaZeroNetwork(nn.Module):
         x = F.relu(x, inplace=True)
 
         """ Residual blocks """
-        for i in range(self.CFG.n_residual_block):
-            x = self.resnet(x)
+        x = self.resnet(x)
 
         return x
 

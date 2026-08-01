@@ -46,7 +46,7 @@ class SelfPlay():
         if done:
             # 引き分けなら  0
             # 勝った時は +1 
-            v = -reward
+            v = reward
 
         else:
             """ 再帰的に自己対局 """

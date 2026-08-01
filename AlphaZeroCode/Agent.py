@@ -40,7 +40,7 @@ class Agent:
         return action
 
     def random(self, state):
-        legal_actions = self.env.get_legal_actions(state)
+        legal_actions = self.env.get_legal_actions()
         action = random.choice(legal_actions)
         return action
 
